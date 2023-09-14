@@ -24,7 +24,6 @@ services:
     depends_on:
       - db
     volumes:
-      - ./.env:/app/.env
       - ./backups:/app/storage/app/backups
       - linkace_app:/app
       - linkace_logs:/app/storage/logs
