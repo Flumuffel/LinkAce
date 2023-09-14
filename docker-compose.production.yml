@@ -14,6 +14,8 @@ services:
       - MYSQL_DATABASE=${DB_DATABASE}
     volumes:
       - db:/var/lib/mysql
+    networks:
+      - linkace
 
   # --- LinkAce Image with PHP
   app:
@@ -26,14 +28,21 @@ services:
       - ./backups:/app/storage/app/backups
       - linkace_app:/app
       - linkace_logs:/app/storage/logs
+    networks:
+      - linkace
 
   # --- nginx
   nginx:
     image: bitnami/nginx:1.21
     restart: unless-stopped
-    ports:
-      - "0.0.0.0:80:8080"
+    #ports:
+      #- "0.0.0.0:80:8080"
       #- "0.0.0.0:443:8443"
+    labels:
+      - "traefik.enable=True"
+      - "traefik.http.routers.linkace.rule=Host(`web.flumuffel.de`)"
+      #- "traefik.http.services.linkace.loadbalancer.server.port=3000"
+      - "traefik.http.routers.linkace.entrypoints=https"
     depends_on:
       - app
     volumes:
@@ -42,16 +51,27 @@ services:
       # if you want to use HTTPS for this container
       - ./nginx.conf:/opt/bitnami/nginx/conf/server_blocks/linkace.conf:ro
       #- /path/to/your/ssl/certificates:/certs:ro
+    networks:
+      - web
+      - linkace
 
   # --- Redis
   redis:
     image: bitnami/redis:6.2
     restart: unless-stopped
     environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PASSWORD=Lucapsielt2004
+    networks:
+      - linkace
 
 volumes:
   linkace_app:
   linkace_logs:
   db:
     driver: local
+    
+networks:
+  web:
+    name: traefik_web
+  linkace:
+      name: linkace_default
